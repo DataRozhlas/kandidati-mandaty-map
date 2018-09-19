@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, user-scalable=no" />
+
+<!--brát odsud dál-->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.4/leaflet.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.4.1/MarkerCluster.Default.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.4.1/MarkerCluster.css" />
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.4/leaflet.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.4.1/leaflet.markercluster.js"></script>
+<script src="map-data.js"></script>
+
+<style>
+    #mapa {
+        width: 100%;
+        height: 60vh; 
+    }
+    .leaflet-marker-icon {
+        background-color: rgba(158,202,225, 0.6) !important;
+    }
+    .leaflet-marker-icon div {
+        background-color: rgba(158,202,225, 0.6) !important;
+    }
+    #legend {
+        height: auto;
+        width: 100%;
+        margin: 10px 0px 10px 0px;
+        text-align: center;
+        font-size: 14px;
+        color: #73737f;
+        font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+    }
+    #legend a {
+        color: #519fd7;
+        text-decoration: none;
+    }
+    #legend a:hover {
+        text-decoration: underline;
+    }
+</style>
+
+<div id="mapa"></div>
+<div id="legend">
+        Vyberte obec v mapě.
+    </div>
+
+<script>
+
+    var colors = {
+        '1': '#e41a1c',
+        '2': '#ff7f00',
+        '3': '#377eb8' 
+    }
+    var typy = {
+        '1': 'nikdo zde nekandiduje',
+        '2': 'kandidátů je zde méně než mandátů',
+        '3': 'je zde tolik kandidátů jako mandátů' 
+    }
+    var map = L.map('mapa').setView([49.7417517, 15.3350758], 7);
+    map.scrollWheelZoom.disable()
+
+    L.tileLayer('https://samizdat.cz/tiles/ton_b1/{z}/{x}/{y}.png', {
+        attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> přispěvatelé',
+        maxZoom: 18,
+    }).addTo(map);
+
+    L.tileLayer('https://samizdat.cz/tiles/ton_l2/{z}/{x}/{y}.png', {
+        attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> přispěvatelé',
+        maxZoom: 18,
+    }).addTo(map);
+
+    var markers = L.markerClusterGroup({
+        singleMarkerMode: true,
+        showCoverageOnHover: false
+    });
+    Object.values(mapData).forEach(function(d) {
+        var mrk = L.circleMarker([d.y, d.x], {
+            color: 'lightgray',
+            weight: 1,
+            fillColor: colors[d.TYP],
+            fillOpacity: 0.8,
+            radius: 7,
+            jmeno: d.NAZEVZAST,
+            okres: d.NAZEVNUTS,
+            obyv: d.POCOBYV,
+            mandaty: d.MANDATY,
+            kandidati: d.POCET_KANDIDATU,
+            typ: d.TYP
+        });
+        markers.addLayer(mrk);
+
+        mrk.on('click', function(evt) {
+            var ops = evt.target.options;
+            document.getElementById('legend').innerHTML = 'Obec <b>' + ops.jmeno + '</b> (okres ' + ops.okres + ')<br>'
+            + '<i>' + typy[ops.typ] + '</i>'
+            + '<br>Mandátů: '+ ops.mandaty + ', kandidátů: ' + ops.kandidati + ' (' + ops.obyv + ' obyvatel)'
+        });
+    })
+    map.addLayer(markers);
+</script>
